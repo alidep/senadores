@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<head>
+<style>
+  
+
+  
+  
+body{
+  background-color: #4D134E;
+}
+.axis {
+  font: 14px sans-serif;
+}
+
+text {
+  fill: white;
+  font-size: 15px;
+  text-align: center;
+  font-family: 'CubanoRegular';
+}
+
+h2{
+  color: white;
+  font-size: 36px;
+  text-align: center;
+  font-family: 'CubanoRegular';
+
+}
+
+p{
+  color: white;
+  font-size: 18px;
+  text-align: center;
+ font-family: 'Chivo', sans-serif;
+  text-align: center;
+
+}
+
+.pregunta {
+  color: white;
+  font-size: 16px;
+  text-align: center;
+  font-family: 'CubanoRegular';
+  text-align: center;
+
+
+
+}
+
+#myList{
+  
+  height: 30px;
+ font-family: 'Chivo', sans-serif;
+  font-size: 13px;
+ border-radius: 0px;
+  margin: 5px;
+  border-radius: 0px;
+  
+}
+
+.questioncontainer
+{
+  width: 100%;
+  margin-right: auto;
+  margin-left: auto;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.d3-tip {
+  line-height: 1;
+  font-weight: bold;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  border-radius: 2px;
+}
+
+/* Creates a small triangle extender for the tooltip */
+.d3-tip:after {
+  box-sizing: border-box;
+  display: inline;
+  font-size: 10px;
+  width: 100%;
+  line-height: 1;
+  color: rgba(0, 0, 0, 0.8);
+  content: "\25BC";
+  position: absolute;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  text {
+    font-size: 20px;
+  }
+}
+
+.long-text {
+  color: white;
+  text-align: center;
+  font-family: Chivo-Regular;
+}
+
+#thing{
+
+  
+  width: 900px;
+  margin: 0 auto;
+}
+
+#comparacion
+{
+  
+  width: 1200px;
+  margin: 0 auto;
+  
+/*background: linear-gradient(to right, #000 20%, rgba(0, 0, 0, 0) 20%), linear-gradient(to right, #dd0000 40%, #ffc608 40%), linear-gradient(to right, #000 80%, rgba(0, 0, 0, 0) 80%);*/
+
+
+/*background:linear-gradient(to right, #ED337D 20%, #FC86B5 20%, #FC86B5 40%, #A1EBF3 40%, #A1EBF3 60%, #4EE3F3 60%, #4EE3F3 80%, #BEBEBE 80%);
+*/
+
+}
+div.graph-text {
+  position: absolute;
+  text-align: center;
+  padding: 2px;
+  font-size: 18px;
+  background: #ff2079;
+  border: 0px;
+  border-radius: 8px;
+}
+
+</style>
+  <link href="https://fonts.googleapis.com/css?family=Chivo" rel="stylesheet">
+  <script src='https://d3js.org/d3.v5.min.js'></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.7.1/d3-tip.min.js"></script>
+
+  <script src="data2.js"></script>
+
+</head>
+<body>
+  <div id="thing">
+  <h2>Como votaron los senadores </h2>
+</br>
+</br>
+<!--    <div class="questioncontainer">
+
+<span class="pregunta"> Elige una tema:</span> <br><select id="myList" >
+  <option value="data1">Conflicto de intereses con funcionarios del gobierno</option>
+  <option value="data2">Elecciones en corporaciones públicas</option>
+  <option value="data3">Mujeres transgénero en Colombia</option>  
+
+  
+</select>
+<div id="question">
+  <p>¿Debe prohibirse el porte y consumo de dosis personal de drogas ilícitas?</p>
+</div>
+</div> -->
+  <div id="comparacion">
+
+    <svg id="comparation">
+     </svg>
+  </div>
+</div>
+
+</body>
+
+<script>
+
+var forceStrength = 0.08
+var radio = 5
+var svgSize = {width: 0, height: 0}
+var margin = {top: 0, right: 100, bottom: 50, left: 100}
+var simulation 
+var datos
+
+d3.json("leyes.json")
+  .then(graph => {
+    datos = graph
+    plot()
+  })
+  .catch(error => {
+    console.log(error)
+  })
+
+
+
+
+
+
+
+
+
+
+
+  // console.log(graph)
+    // SVG size
+    // svgSize.width = document.getElementById('comparation').clientWidth - margin.left - margin.right
+    // svgSize.height = height - margin.top - margin.bottom
+
+var height = 900
+
+    svgSize.width = 1200 - margin.left - margin.right
+    svgSize.height = height - margin.top - margin.bottom
+
+
+var tip = d3.tip()
+  .attr('class', 'd3-tip')
+  .offset([-10, 0])
+  .html(function(d) {
+    return "<strong>Frequency:</strong> <span style='color:red'>" + d.answer + "</span>";
+  })
+
+
+    // Append the svg
+   svg = d3.select('#comparation')
+      .attr('width', 1200)
+      .attr('height', height)
+      .append('g')
+      .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+
+svg.call(tip);
+
+
+function plot () {
+    // X scale
+    var x = d3.scaleOrdinal()
+      .range([0,svgSize.width *.25, svgSize.width * .50, svgSize.width * .75, svgSize.width])
+      .domain([0, 3, 1, 2]);
+
+
+    // Y scale
+    var y = d3.scaleOrdinal()
+      
+      .range([100, 200, 300, 400, 500, 600 ,700 , 800, svgSize.height])
+      .domain(["matrimonio igualitario", "identidad de genero", "regimen empreadas domesticas", "inceminacion arifical", "identidad de genero", "trata personas", "educacion sexual integral", "asignacion universal", "reforma provicional"]);
+
+    // Init the simulation
+    simulation = d3.forceSimulation()
+      // .velocityDecay(0.5)
+      // .gravity(0)
+      .force('x', d3.forceX().strength(forceStrength).x((d) => { return x(d.voto) }))
+      .force('y', d3.forceY().strength(forceStrength).y((d) => { console.log(d.asunto, y(d.asunto)); return y(d.asunto) }))
+      .force('collide', d3.forceCollide().radius((d) => { return radio }))
+
+
+
+    // Add a g to for each node
+    node = svg.selectAll('.node')
+      .data(datos)
+      .enter().append('g')
+      .attr('class', 'node')
+
+    // Append a circle
+    node.append('circle')
+      .attr('r', radio)
+      .style('fill', '#eee')
+
+
+    // Append the photos
+    node.append('image')
+      .attr('xlink:href', (d) => { return d.photo })
+      .attr('x', -radio)
+      .attr('y', -radio)
+      .attr('width', 2 * radio)
+      .attr('height', 2 * radio)
+      // .on('mouseover', tip.show)
+      // .on('mouseout', tip.hide)
+
+    // Append the x axis
+    svg.append('g')
+      .attr('class', 'axis')
+      .attr('transform', 'translate(0,25)')
+      .call(d3.axisBottom(x))
+      .select('.domain')
+      .remove()
+
+
+
+
+    svg.selectAll('.axis .tick line')
+      .remove()
+
+    svg.selectAll('.axis .tick text')
+      .attr('y', 0)
+      .attr('dy', 0)
+      .text((d) => { return d })
+
+    // Append the y axis
+    svg.append('g')
+      .attr('class', 'axis')
+      .attr('transform', 'translate(' + svgSize.width + ', 0)')
+      .call(d3.axisLeft(y))
+      .select('.domain')
+      .remove()
+
+    simulation
+      .nodes(datos)
+      .on('tick', ticked)
+
+    //})
+}
+
+
+
+
+
+    function ticked () {
+
+var t = d3.transition()
+    .duration(3000)
+    .ease(d3.easeElastic);
+
+      node
+        .transition(t)
+        .attr('transform', function (d) {
+          return 'translate(' + d.x + ',' + d.y + ')'
+        })
+
+
+
+    }
+
+
+    // function mouseover (d) {
+    //   /*
+    //     On mouse over highlight the rect and show the tooltip
+    //   */
+    //   // Update the tooltip position and value
+    //   d3.select('#tooltip')
+    //     .style('left', (d3.event.pageX - 125) + 'px')
+    //     .style('top', (d3.event.pageY + 20) + 'px')
+    //     .select('#value')
+    //     .html(() => {
+    //       if ($route.params.name === d.name) {
+    //         return '<strong>' + d.name.replace(/-/, ' ') + '</strong>'
+    //       } else {
+    //         return '<strong>' + d.name.replace(/-/g, ' ') + '</strong><br /> tiene un <strong>' +
+    //                d.similarity.toFixed(2) + '%</strong> de similitud de respuestas con <strong>' +
+    //                $route.params.name.replace(/-/, ' ') + '</strong>'
+    //       }
+    //     })
+
+    //   // Show the tooltip
+    //   d3.select('#tooltip').classed('hidden', false)
+    // }
+
+    // function mouseout (d) {
+    //   /*
+    //     On mouse out, remove the highlight
+    //   */
+    //   d3.select('#tooltip').classed('hidden', true)
+    // }
+
+function update(newData) {
+
+graph = newData
+node = node.data(graph.nodes)
+
+simulation.nodes(graph.nodes)
+    .alphaTarget(1).restart()
+    // .force("charge", d3.forceManyBody().strength(-300))
+    // .force("center", d3.forceCenter(width, height));
+    
+    
+  }
+
+
+document.getElementById("myList").onchange = function() {
+   var dataOption = document.getElementById("myList").value;
+   var qDiv = document.getElementById("question");
+
+   if(dataOption=="data1"){
+   
+   return update(data1), qDiv.innerHTML = "<p>¿Debe ser obligatorio que todos los altos funcionarios del gobierno publiquen su declaración de renta y conflicto de intereses al ingresar al cargo y al salir de este?</p>";;
+
+   
+   }
+   else if(dataOption=="data2"){
+   return update(data2), qDiv.innerHTML = "<p>¿Deben desmontarse las listas abiertas e implementarse las listas cerradas para elecciones en corporaciones públicas?</p>";
+  
+   }
+   else if(dataOption=="data3"){
+   return update(data3), qDiv.innerHTML = "<p>La expectativa de vida de las mujeres transgénero en Colombia es de 35 años, ¿debe darse atención prioritaria a éstas ciudadanas?</p>";
+   
+   
+   }
+
+};
+
+
+
+    
+      
+
+
+
+
+
+// d3.selectAll("p").transition().style("font-size","24px").duration(10000);
+
+
+</script>
+
+
+</html>
